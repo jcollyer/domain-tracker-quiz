@@ -7,7 +7,7 @@ require('./style.less');
 var Domain = React.createClass({
   mixins: [ReactFireMixin],
   getInitialState: function() {
-    return {items: [], domain: '', text: '', show_help: false};
+    return {items: [], domain: '', text: '', show_help: false, valid_domain: false};
   },
   onDomainChange: function(e) {
     this.setState({domain: e.target.value, show_help: false});
@@ -19,19 +19,22 @@ var Domain = React.createClass({
     return /^(https?|ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i.test(value);
   },
   handleSubmit: function(e) {
-    var domain = this.state.domain;
-
-    if (this.validDomain(domain)){
+    if (this.validDomain(this.state.domain)){
       e.preventDefault();
-      this.firebaseRefs.items.push({
-        domain: domain,
-        text: this.state.text
-      });
-      this.setState({domain: "", text: "", show_help: false});
+      this.updateFirebase();
+      this.setState({domain: "", text: "", valid_domain: true, show_help: false});
     } else {
       e.preventDefault();
-      this.setState({domain: "", show_help: true});
+      this.updateFirebase();
+      this.setState({domain: "", show_help: true, valid_domain: false});
     }
+  },
+  updateFirebase: function() {
+    this.firebaseRefs.items.push({
+      domain: this.state.domain,
+      text: this.state.text,
+      valid_domain: this.validDomain(this.state.domain)
+    });
   },
   componentWillMount: function() {
     var ref = new Firebase("https://burning-heat-3182.firebaseio.com/items/");
@@ -63,12 +66,13 @@ var Domain = React.createClass({
 
 var DomainList = React.createClass({
   render: function() {
-    var createItem = function(itemText, index) {
+    var createItem = function(item, index) {
       return (
-        <tr key={index + itemText}>
+        <tr key={index + item}>
           <td>{index + 1}</td>
-          <td>{itemText.domain}</td>
-          <td>{itemText.text}</td>
+          <td>{item.domain}</td>
+          <td>{item.text}</td>
+          <td className={item.valid_domain? "valid":"not-valid"}></td>
         </tr>
       );
     };
@@ -78,6 +82,7 @@ var DomainList = React.createClass({
           <td>Domain #</td>
           <td>Domain Name</td>
           <td>Domain Description</td>
+          <td>Valid?</td>
         </tr>
         {this.props.items.map(createItem)}
         </table>
