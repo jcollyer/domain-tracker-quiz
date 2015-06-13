@@ -12,14 +12,14 @@ var Todo = React.createClass({
   },
   handleSubmit: function(e) {
     e.preventDefault();
-    this.firebaseRef.push({
+    // debugger;
+    this.firebaseRefs.items.push({
       text: this.state.text
     });
     this.setState({text: ""});
   },
   componentWillMount: function() {
     var ref = new Firebase("https://burning-heat-3182.firebaseio.com/items/");
-    debugger;
       this.bindAsArray(ref, "items");
     // this.bindAsObject(new Firebase("https://burning-heat-3182.firebaseio.com/items/"), "items");
     // this.firebaseRef = new Firebase("https://burning-heat-3182.firebaseio.com/items/");
