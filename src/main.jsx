@@ -7,7 +7,7 @@ require('./style.less');
 var Domain = React.createClass({
   mixins: [ReactFireMixin],
   getInitialState: function() {
-    return {items: [], domain: '', text: '', show_help: false, valid_domain: false};
+    return {items: [], domain: '', text: '', show_help: false, valid_domain: false, date_created: ""};
   },
   onDomainChange: function(e) {
     this.setState({domain: e.target.value, show_help: false});
@@ -22,18 +22,24 @@ var Domain = React.createClass({
     if (this.validDomain(this.state.domain)){
       e.preventDefault();
       this.updateFirebase();
-      this.setState({domain: "", text: "", valid_domain: true, show_help: false});
+      this.setState({domain: "", text: "", show_help: false});
     } else {
       e.preventDefault();
       this.updateFirebase();
-      this.setState({domain: "", show_help: true, valid_domain: false});
+      this.setState({domain: "", show_help: true});
     }
   },
+  getTime: function() {
+    var date = new Date();
+    return date.toLocaleDateString("en-US");
+  },
   updateFirebase: function() {
+
     this.firebaseRefs.items.push({
       domain: this.state.domain,
       text: this.state.text,
-      valid_domain: this.validDomain(this.state.domain)
+      valid_domain: this.validDomain(this.state.domain),
+      date_created: this.getTime()
     });
   },
   componentWillMount: function() {
@@ -73,6 +79,7 @@ var DomainList = React.createClass({
           <td>{item.domain}</td>
           <td>{item.text}</td>
           <td className={item.valid_domain? "valid":"not-valid"}></td>
+          <td>{item.date_created}</td>
         </tr>
       );
     };
@@ -83,6 +90,7 @@ var DomainList = React.createClass({
           <td>Domain Name</td>
           <td>Domain Description</td>
           <td>Valid?</td>
+          <td>Date Created</td>
         </tr>
         {this.props.items.map(createItem)}
         </table>
