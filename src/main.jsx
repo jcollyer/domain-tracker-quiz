@@ -45,16 +45,16 @@ var Domain = React.createClass({
       <div>
         <div id="help" className={this.state.show_help ? "show" : ""}>you need help!!</div>
         <h3>Domain</h3>
-        <DomainList items={this.state.items} />
         <form onSubmit={this.handleSubmit}>
           domain:
           <input onChange={this.onDomainChange} value={this.state.domain} />
-          <br />
           description:
           <input type="text" onChange={this.onTextChange} value={this.state.text} />
-          <br />
           <button>{'Add Domain #' + (this.state.items.length + 1)}</button>
         </form>
+        <br />
+        <br />
+        <DomainList items={this.state.items} />
       </div>
     );
   }
@@ -64,9 +64,24 @@ var Domain = React.createClass({
 var DomainList = React.createClass({
   render: function() {
     var createItem = function(itemText, index) {
-      return <li key={index + itemText}>{itemText}</li>;
+      return (
+        <tr key={index + itemText}>
+          <td>{index + 1}</td>
+          <td>{itemText.domain}</td>
+          <td>{itemText.text}</td>
+        </tr>
+      );
     };
-    return <ul>{this.props.items.map(createItem)}</ul>;
+    return (
+      <table>
+        <tr>
+          <td>Domain #</td>
+          <td>Domain Name</td>
+          <td>Domain Description</td>
+        </tr>
+        {this.props.items.map(createItem)}
+        </table>
+    );
   }
 });
 
