@@ -2,7 +2,7 @@ var React = require('react');
 require('../node_modules/firebase/lib/firebase-web.js');
 var ReactFireMixin = require('../node_modules/reactfire/dist/reactfire.js');
 
-var Todo = React.createClass({
+var Domain = React.createClass({
   mixins: [ReactFireMixin],
   getInitialState: function() {
     return {items: [], text: ''};
@@ -10,13 +10,24 @@ var Todo = React.createClass({
   onChange: function(e) {
     this.setState({text: e.target.value});
   },
+  validDomain: function(domain) {
+    return false;
+  },
   handleSubmit: function(e) {
-    e.preventDefault();
-    // debugger;
-    this.firebaseRefs.items.push({
-      text: this.state.text
-    });
-    this.setState({text: ""});
+    var domain = this.state.text;
+
+    if (this.validDomain(domain)){
+      e.preventDefault();
+      this.firebaseRefs.items.push({
+        text: domain
+      });
+      this.setState({text: ""});
+    } else {
+      e.preventDefault();
+      console.log("please enter valid domain");
+      this.setState({text: ""});
+    }
+
   },
   componentWillMount: function() {
     var ref = new Firebase("https://burning-heat-3182.firebaseio.com/items/");
@@ -36,11 +47,11 @@ var Todo = React.createClass({
   render: function() {
     return (
       <div>
-        <h3>TODO</h3>
-        <TodoList items={this.state.items} />
+        <h3>Domain</h3>
+        <DomainList items={this.state.items} />
         <form onSubmit={this.handleSubmit}>
           <input onChange={this.onChange} value={this.state.text} />
-          <button>{'Add #' + (this.state.items.length + 1)}</button>
+          <button>{'Add Domain #' + (this.state.items.length + 1)}</button>
         </form>
       </div>
     );
@@ -48,7 +59,7 @@ var Todo = React.createClass({
 });
 
 
-var TodoList = React.createClass({
+var DomainList = React.createClass({
   render: function() {
     var createItem = function(itemText, index) {
       return <li key={index + itemText}>{itemText}</li>;
@@ -59,6 +70,6 @@ var TodoList = React.createClass({
 
 
 
-App = React.render(<Todo />, document.getElementById('home'));
+App = React.render(<Domain />, document.getElementById('home'));
 
 
