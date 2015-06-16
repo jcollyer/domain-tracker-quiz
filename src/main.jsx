@@ -2,7 +2,6 @@ var React = require('react');
 require('../node_modules/firebase/lib/firebase-web.js');
 var ReactFireMixin = require('../node_modules/reactfire/dist/reactfire.js');
 
-
 require('./style.less');
 
 var Domain = React.createClass({
@@ -18,25 +17,25 @@ var Domain = React.createClass({
   },
   storedDomainValue: function(value) {
     var inputArray = value.toUpperCase().split("/").join(".").split(".");
-
-    for(var i = 0; i < inputArray.length; i++ ) {
-      if(topLevelDomainArray.indexOf(inputArray[i]) > -1){ //check if inputArray contains a topLevelDomain
-        storedValue = value; //set original string as the stored value
-        if (inputArray[i - 1]) {
-          storedValue = inputArray[i - 1] +"."+ inputArray[i]; //overwrite stored value if suffex has a valid prefix
-          isValidDomain = true;
-          console.log("valid domain stored as: ", storedValue.toLocaleLowerCase());
-          return;
+    if (value.split(".").length <= 4){ // no more that three "." allowed in a valid domain
+      var firstValue = value.split(".")[0];
+      if (firstValue === "www" || firstValue === "http://www" || firstValue === "https://www" || value.split(".").length < 3){
+        for(var i = 0; i < inputArray.length; i++ ) {
+          if(topLevelDomainArray.indexOf(inputArray[i]) > -1){ //check if inputArray contains a topLevelDomain
+            storedValue = value; //set original string as the stored value
+            if (inputArray[i - 1]) {
+              storedValue = inputArray[i - 1] +"."+ inputArray[i]; //overwrite stored value if suffex has a valid prefix
+              isValidDomain = true;
+              console.log("valid domain stored as: ", storedValue.toLocaleLowerCase());
+              return;
+            }
+          }
         }
       }
-    };
-
-    // debugger;
-    console.log("not a valid domain, stored as: ", value);
+    }
     isValidDomain = false;
     storedValue = value; //set original string as the stored value
-
-
+    console.log("not a valid domain, stored as: ", value);
   },
   handleSubmit: function(e) {
     this.storedDomainValue(this.state.domain);
@@ -52,10 +51,9 @@ var Domain = React.createClass({
   },
   getTime: function() {
     var date = new Date();
-    return date.toLocaleDateString("en-US");
+    return date.toLocaleDateString("en-US") +" @"+ date.toLocaleTimeString();
   },
   updateFirebase: function() {
-
     this.firebaseRefs.items.push({
       domain: storedValue.toLocaleLowerCase(),
       text: this.state.text,
