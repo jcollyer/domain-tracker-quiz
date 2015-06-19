@@ -7,58 +7,54 @@ require('./style.less');
 var Domain = React.createClass({
   mixins: [ReactFireMixin],
   getInitialState: function() {
-    return {items: [], domain: '', text: '', show_help: false, valid_domain: false, date_created: ""};
+    return {items: [], domain: '', text: '', show_help: false, show_success: false, valid_domain: false, date_created: ""};
   },
   onDomainChange: function(e) {
-    this.setState({domain: e.target.value, show_help: false});
+    this.setState({domain: e.target.value, show_help: false, show_success: false});
   },
   onTextChange: function(e) {
     this.setState({text: e.target.value});
   },
   storedDomainValue: function(value) {
-    var inputArray = value.toUpperCase().split("/").join(".").split(".");
-    if (value.split(".").length <= 4){ // no more that three "." allowed in a valid domain
-      var firstValue = value.split(".")[0];
-      if (firstValue === "www" || firstValue === "http://www" || firstValue === "https://www" || value.split(".").length < 3){
-        for(var i = 0; i < inputArray.length; i++ ) {
-          if(topLevelDomainArray.indexOf(inputArray[i]) > -1){ //check if inputArray contains a topLevelDomain
-            storedValue = value; //set original string as the stored value
-            if (inputArray[i - 1]) {
-              storedValue = inputArray[i - 1] +"."+ inputArray[i]; //overwrite stored value if suffex has a valid prefix
-              isValidDomain = true;
-              console.log("valid domain stored as: ", storedValue.toLocaleLowerCase());
-              return;
-            }
-          }
-        }
+
+    var valueArray = value.toUpperCase().split("."); // Uppercase to standardize, then split by "." if any.
+    if (valueArray.length > 1) { // Check if at least 2 stings in the array.
+      var validSuffex = valueArray[1].split("/")[0];
+      if (topLevelDomainArray.indexOf(validSuffex) > -1){ // Check if the string value is a valid suffex.
+        storedValue = valueArray[0] +"."+ validSuffex;
+        isValidDomain = true;
+        return; //return out of this function if valid domain.
+        debugger;
       }
+
     }
+
     isValidDomain = false;
     storedValue = value; //set original string as the stored value
-    console.log("not a valid domain, stored as: ", value);
   },
   handleSubmit: function(e) {
     this.storedDomainValue(this.state.domain);
     if (isValidDomain){
       e.preventDefault();
       this.updateFirebase();
-      this.setState({domain: "", text: "", show_help: false});
+      this.setState({domain: "", text: "", show_help: false, show_success: true});
     } else {
       e.preventDefault();
       this.updateFirebase();
-      this.setState({domain: "", show_help: true});
+      this.setState({domain: "", show_help: true, show_success: false});
     }
   },
   getTime: function() {
     var date = new Date();
-    return date.toLocaleDateString("en-US") +" @"+ date.toLocaleTimeString();
+    var formattedTime = date.toLocaleDateString("en-US") +" @"+ date.toLocaleTimeString();
+    return ({formattedTime: formattedTime});
   },
   updateFirebase: function() {
     this.firebaseRefs.items.push({
       domain: storedValue.toLocaleLowerCase(),
       text: this.state.text,
       valid_domain: isValidDomain,
-      date_created: this.getTime()
+      date_created: this.getTime().formattedTime
     });
   },
   componentWillMount: function() {
@@ -70,18 +66,19 @@ var Domain = React.createClass({
   },
   render: function() {
     return (
-      <div>
-        <div id="help" className={this.state.show_help ? "show" : ""}>you need help!!</div>
-        <h3>Domain</h3>
+      <div className="domain-form">
+        <div id="help" className={this.state.show_help ? "feedback show" : ""}>Please enter valid domain.</div>
+        <div id="success" className={this.state.show_success ? "feedback show" : ""}>Domain added successfully!</div>
+        <h1>URLIST</h1>
         <form onSubmit={this.handleSubmit}>
-          domain:
-          <input onChange={this.onDomainChange} value={this.state.domain} />
-          description:
-          <input type="text" onChange={this.onTextChange} value={this.state.text} />
+          <label className="domain">http://www</label>
+          <input type="text" onChange={this.onDomainChange} value={this.state.domain} placeholder="google.com" required />
+          <br />
+          <label>Description: </label>
+          <input type="textarea" onChange={this.onTextChange} value={this.state.text} placeholder="a search tool..." required />
+          <br />
           <button>{'Add Domain #' + (this.state.items.length + 1)}</button>
         </form>
-        <br />
-        <br />
         <DomainList items={this.state.items} />
       </div>
     );
@@ -103,15 +100,19 @@ var DomainList = React.createClass({
       );
     };
     return (
-      <table>
-        <tr>
-          <td>Domain #</td>
-          <td>Domain Name</td>
-          <td>Domain Description</td>
-          <td>Valid?</td>
-          <td>Date Created</td>
-        </tr>
-        {this.props.items.map(createItem)}
+      <table className="table table-striped">
+        <thead>
+          <tr>
+            <th>Domain #</th>
+            <th>Domain Name</th>
+            <th>Domain Description</th>
+            <th>Valid?</th>
+            <th>Date Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {this.props.items.map(createItem)}
+        </tbody>
         </table>
     );
   }
