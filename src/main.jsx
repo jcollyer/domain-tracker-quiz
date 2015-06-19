@@ -4,6 +4,25 @@ var ReactFireMixin = require('../node_modules/reactfire/dist/reactfire.js');
 
 require('./style.less');
 
+// router
+var Router = require('react-router-component');
+var Template = require('./app-template.jsx');
+var Locations = Router.Locations;
+var Location  = Router.Location;
+
+var App = React.createClass({
+  render:function(){
+    return (
+      <Template>
+        <Locations>
+          <Location path="/" handler={Domain} />
+          <Location path="/domains" handler={Domains} />
+        </Locations>
+      </Template>
+    );
+  }
+});
+
 var Domain = React.createClass({
   mixins: [ReactFireMixin],
   getInitialState: function() {
@@ -16,7 +35,6 @@ var Domain = React.createClass({
     this.setState({text: e.target.value});
   },
   storedDomainValue: function(value) {
-
     var valueArray = value.toUpperCase().split("."); // Uppercase to standardize, then split by "." if any.
     if (valueArray.length > 1) { // Check if at least 2 stings in the array.
       var validSuffex = valueArray[1].split("/")[0];
@@ -24,11 +42,8 @@ var Domain = React.createClass({
         storedValue = valueArray[0] +"."+ validSuffex;
         isValidDomain = true;
         return; //return out of this function if valid domain.
-        debugger;
       }
-
     }
-
     isValidDomain = false;
     storedValue = value; //set original string as the stored value
   },
@@ -79,14 +94,24 @@ var Domain = React.createClass({
           <br />
           <button>{'Add Domain #' + (this.state.items.length + 1)}</button>
         </form>
-        <DomainList items={this.state.items} />
+        <a className="fancy-link" href="/domains">See all Domains</a>
       </div>
     );
   }
 });
 
-
-var DomainList = React.createClass({
+var Domains = React.createClass({
+  mixins: [ReactFireMixin],
+  getInitialState: function() {
+    return {items: []}
+  },
+  componentWillMount: function() {
+    var ref = new Firebase("https://burning-heat-3182.firebaseio.com/items/");
+    this.bindAsArray(ref, "items");
+  },
+  componentWillUnmount: function() {
+    this.firebaseRef.off();
+  },
   render: function() {
     var createItem = function(item, index) {
       return (
@@ -100,28 +125,30 @@ var DomainList = React.createClass({
       );
     };
     return (
-      <table className="table table-striped">
-        <thead>
-          <tr>
-            <th>Domain #</th>
-            <th>Domain Name</th>
-            <th>Domain Description</th>
-            <th>Valid?</th>
-            <th>Date Created</th>
-          </tr>
-        </thead>
-        <tbody>
-          {this.props.items.map(createItem)}
-        </tbody>
-        </table>
+      <div>
+        <a className="fancy-link" href="/">Back</a>
+        <table className="table table-striped">
+          <thead>
+            <tr>
+              <th>Domain #</th>
+              <th>Domain Name</th>
+              <th>Domain Description</th>
+              <th>Valid?</th>
+              <th>Date Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {this.state.items.map(createItem)}
+          </tbody>
+          </table>
+        </div>
     );
   }
 });
 
+App = React.render(<App />, document.getElementById('home'));
 
-
-App = React.render(<Domain />, document.getElementById('home'));
-
+//global variables
 isValidDomain = false;
 storedValue = "";
 
